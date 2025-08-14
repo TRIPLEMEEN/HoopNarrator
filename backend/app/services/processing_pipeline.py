@@ -5,15 +5,12 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 import json
 
-from ..core.config import settings
-from .video_processor import VideoProcessor
-from .commentary_generator import CommentaryGenerator
-from .voice_generator import VoiceGenerator
-from ..utils.video_utils import (
-    get_video_info,
-    extract_frames,
-    combine_audio_video,
-    create_vertical_video
+from app.core.config import settings
+from app.services.video_processor import VideoProcessor
+from app.services.commentary_generator import CommentaryGenerator
+from app.services.voice_generator import VoiceGenerator
+from app.utils.video_utils import (
+    get_video_info
 )
 
 # Configure logging

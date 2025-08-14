@@ -4,16 +4,16 @@ import json
 from typing import Dict, Any, Optional, Union
 from pathlib import Path
 import openai
-from elevenlabs import generate, set_api_key, voices
+from elevenlabs.client import ElevenLabs
 
-from ...core.config import settings
+from app.core.config import settings
 
 class VoiceGenerator:
     def __init__(self):
         # Set API keys
         openai.api_key = settings.OPENAI_API_KEY
         if settings.ELEVENLABS_API_KEY:
-            set_api_key(settings.ELEVENLABS_API_KEY)
+            self.client = ElevenLabs(api_key=settings.ELEVENLABS_API_KEY)
         
         # Voice profiles for different personalities
         self.voice_profiles = {
@@ -100,7 +100,7 @@ class VoiceGenerator:
     ) -> Dict[str, Any]:
         """Generate voiceover using ElevenLabs API"""
         # Generate audio using ElevenLabs
-        audio = generate(
+        audio = self.client.generate(
             text=text,
             voice=voice_profile["voice_id"],
             model="eleven_monolingual_v1",

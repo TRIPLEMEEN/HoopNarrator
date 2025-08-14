@@ -5,7 +5,7 @@ from pathlib import Path
 import uuid
 from datetime import datetime
 
-from ...core.config import settings
+from app.core.config import settings
 
 from .endpoints import videos
 

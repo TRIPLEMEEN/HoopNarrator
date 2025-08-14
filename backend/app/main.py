@@ -5,8 +5,8 @@ from pathlib import Path
 import uvicorn
 import os
 
-from .core.config import settings
-from .api.api_v1.api import api_router
+from app.core.config import settings
+from app.api.api_v1.api import api_router
 
 # Ensure upload directory exists
 Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
@@ -18,14 +18,17 @@ app = FastAPI(
 )
 
 # Set up CORS
-if settings.BACKEND_CORS_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",  # Common React port
+        "http://localhost:5173",  # Vite default port
+        "http://127.0.0.1:5173",  # Vite alternative
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=settings.UPLOAD_DIR), name="static")
@@ -38,4 +41,4 @@ async def root():
     return {"message": "Welcome to HoopNarrator API"}
 
 if __name__ == "__main__":
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

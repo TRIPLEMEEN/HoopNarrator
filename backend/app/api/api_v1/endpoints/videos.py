@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Depends
+from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import FileResponse, JSONResponse
 from typing import List, Optional
 import os
@@ -7,70 +7,67 @@ from pathlib import Path
 import shutil
 import asyncio
 
-from ....core.config import settings
-from ....services.processing_pipeline import ProcessingPipeline
-from ....models.video import VideoStatus
+from app.core.config import settings
+from app.services.processing_pipeline import ProcessingPipeline
+from app.models.video import VideoStatus
 
 router = APIRouter()
 
 # In-memory storage for video processing status (replace with Redis in production)
 processing_status = {}
 
-@router.post("/upload", response_model=dict)
-async def upload_video(
-    background_tasks: BackgroundTasks,
+
+@router.post("/process")
+async def process_video(
+    request: Request,
     file: UploadFile = File(...),
-    personality: str = "hype",
-    language: str = "en"
+    personality: str = Form(...)
 ):
-    """Upload a video for processing"""
-    # Validate file type
-    file_ext = Path(file.filename).suffix.lower()
-    if file_ext not in [".mp4", ".webm", ".mov"]:
-        raise HTTPException(
-            status_code=400,
-            detail="Unsupported file type. Please upload an MP4, WebM, or MOV file."
-        )
-    
-    # Generate unique ID for this video
-    video_id = str(uuid.uuid4())
-    filename = f"{video_id}{file_ext}"
-    file_path = os.path.join(settings.UPLOAD_DIR, filename)
-    
-    # Save uploaded file
     try:
-        with open(file_path, "wb+") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        # Log the request details
+        print("\n=== Received Request ===")
+        print(f"Headers: {dict(request.headers)}")
+        print(f"Content type: {request.headers.get('content-type')}")
+        
+        # Verify file was received
+        if not file:
+            raise HTTPException(status_code=400, detail="No file provided")
+            
+        # Verify file content type
+        if not file.content_type.startswith('video/'):
+            raise HTTPException(status_code=400, detail="File must be a video")
+            
+        # Create upload directory if it doesn't exist
+        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+        
+        # Generate a unique filename
+        file_ext = os.path.splitext(file.filename)[1]
+        video_id = str(uuid.uuid4())
+        file_path = os.path.join(settings.UPLOAD_DIR, f"{video_id}{file_ext}")
+        
+        # Save the uploaded file
+        with open(file_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+        
+        print(f"Saved uploaded file to: {file_path}")
+        print(f"File size: {os.path.getsize(file_path)} bytes")
+        print(f"Personality: {personality}")
+        
+        # Return success response with video ID
+        return {
+            "status": "processing",
+            "videoId": video_id,
+            "message": "Video uploaded successfully"
+        }
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error saving file: {str(e)}"
-        )
-    
-    # Initialize processing status
-    processing_status[video_id] = {
-        "status": "uploaded",
-        "progress": 0,
-        "message": "Video uploaded successfully",
-        "result": None,
-        "error": None
-    }
-    
-    # Start background task for processing
-    background_tasks.add_task(
-        process_video_background,
-        video_id=video_id,
-        file_path=file_path,
-        personality=personality,
-        language=language
-    )
-    
-    return {
-        "video_id": video_id,
-        "status": "processing",
-        "message": "Video upload successful. Processing has started.",
-        "check_status_url": f"/api/v1/videos/{video_id}/status"
-    }
+        import traceback
+        print(f"Error processing request: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to process video: {str(e)}")
 
 @router.get("/{video_id}/status", response_model=dict)
 async def get_processing_status(video_id: str):
@@ -205,3 +202,5 @@ async def process_video_background(
             "message": "An unexpected error occurred during processing",
             "error": str(e)
         })
+
+
