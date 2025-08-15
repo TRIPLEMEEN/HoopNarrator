@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import List
+import os
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "HoopNarrator API"
@@ -14,7 +15,7 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
     
     # File uploads
-    UPLOAD_DIR: str = "uploads"
+    UPLOAD_DIR: str = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "uploads")
     MAX_UPLOAD_SIZE: int = 100 * 1024 * 1024  # 100MB
     
     # AI Services
