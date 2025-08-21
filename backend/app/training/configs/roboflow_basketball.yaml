@@ -1,0 +1,132 @@
+# Roboflow Basketball Dataset Configuration
+
+# Model configuration
+model:
+  # Model architecture (n, s, m, l, x)
+  size: 's'  # Small model for faster training
+  # Input image size (height, width)
+  imgsz: 640
+  # Batch size
+  batch: 16
+  # Number of epochs
+  epochs: 100
+  # Learning rate
+  lr0: 0.01
+  # Learning rate scheduler
+  lrf: 0.1
+  # Optimizer
+  optimizer: 'SGD'
+  # Weight decay
+  weight_decay: 0.0005
+  # Momentum
+  momentum: 0.937
+  # Warmup epochs
+  warmup_epochs: 3.0
+  # Warmup momentum
+  warmup_momentum: 0.8
+  # Warmup bias learning rate
+  warmup_bias_lr: 0.1
+
+# Data augmentation
+augment:
+  # HSV-Hue augmentation (fraction)
+  hsv_h: 0.015
+  # HSV-Saturation augmentation (fraction)
+  hsv_s: 0.7
+  # HSV-Value augmentation (fraction)
+  hsv_v: 0.4
+  # Image rotation (+/- deg)
+  degrees: 0.0
+  # Image translation (+/- fraction)
+  translate: 0.1
+  # Image scale (+/- gain)
+  scale: 0.5
+  # Image shear (+/- deg)
+  shear: 0.0
+  # Image perspective (fraction)
+  perspective: 0.0
+  # Flip left-right probability
+  flipud: 0.0
+  # Flip up-down probability
+  fliplr: 0.5
+  # Mosaic augmentation probability
+  mosaic: 1.0
+  # MixUp augmentation probability
+  mixup: 0.1
+
+# Training configuration
+training:
+  # Save best model only
+  save_period: -1
+  # Save checkpoint every N epochs
+  save_period: 10
+  # Number of workers for data loading
+  workers: 8
+  # Use GPU if available
+  device: ''  # cuda device, i.e. 0 or 0,1,2,3 or cpu
+  # Project name
+  project: 'basketball_detection'
+  # Run name
+  name: 'yolov8s_roboflow_csv'
+  # Whether to exist if training already exists
+  exist_ok: False
+  # Whether to resume training from last checkpoint
+  resume: False
+
+# Validation configuration
+val:
+  # Validation batch size
+  batch: 16
+  # Validation image size
+  imgsz: 640
+  # Validation confidence threshold
+  conf: 0.001
+  # NMS IoU threshold
+  iou: 0.6
+  # Maximum detections per image
+  max_det: 300
+  # Whether to save validation images
+  save_hybrid: False
+  # Whether to compute mAP during validation
+  compute_mAP: True
+
+# Logging
+log:
+  # Log directory
+  dir: 'runs/detect'
+  # Whether to log to TensorBoard
+  tensorboard: True
+  # Whether to log to Weights & Biases
+  wandb: False
+  # Whether to log to ClearML
+  clearml: False
+
+# CSV dataset configuration
+csv:
+  # Path to CSV file (relative to dataset directory)
+  annotations: '_annotations.csv'
+  # Path to images directory (relative to dataset directory)
+  images_dir: 'images'
+  # Train/val/test split ratios (must sum to 1.0)
+  split_ratios: [0.7, 0.2, 0.1]
+  # Random seed for reproducibility
+  random_seed: 42
+  
+  # CSV column names (update these to match your CSV file)
+  columns:
+    # Required columns
+    filename: 'filename'
+    class_name: 'class'
+    xmin: 'xmin'
+    ymin: 'ymin'
+    width: 'width'
+    height: 'height'
+    
+    # Optional columns (set to null if not available)
+    # xmax: 'xmax'  # If width not available
+    # ymax: 'ymax'  # If height not available
+    # split: 'split'  # If predefined splits are available
+
+# Class names (will be overridden by the dataset)
+names: ['player', 'referee', 'ball']
+nc: 3  # Will be updated based on the dataset
